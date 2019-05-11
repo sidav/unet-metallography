@@ -21,5 +21,7 @@ myGene = trainGenerator(2,'data/membrane/train','image','label',data_gen_args,sa
 model = load_model('trained_try.h5')
 
 testGene = testGenerator("data/membrane/test")
-results = model.predict_generator(testGene,2,verbose=1)
+print("Predicting...")
+results = model.predict_generator(testGene,6,verbose=1)
+print("Saving results...")
 saveResult("data/membrane/test",results)

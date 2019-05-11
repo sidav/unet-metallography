@@ -82,14 +82,30 @@ def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image
 
 
 
+def imgTo8Bit(img_array):
+    if np.amax(img_array) > 1:
+        img_array = img_array / 255.0
+    return img_array
+
+
 def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_class = False,as_gray = True):
+    import cv2
+    import filters
+    MAX_GRAIN_AREA_TO_REMOVE = 500
     for i in range(num_image):
-        img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
-        img = img / 255
+        img = cv2.imread(os.path.join(test_path,"%d.png"%i))#,as_gray = as_gray)
+        print("Image number", i, ", min: ", np.amin(img), "max: ", np.amax(img))
+        #print(img)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 1)
+        thresh = filters.remove_small_dirts(thresh, MAX_GRAIN_AREA_TO_REMOVE)
+        img = filters.perform_dilation(thresh, 1)
+        img = imgTo8Bit(thresh)
         img = trans.resize(img,target_size)
         img = np.reshape(img,img.shape+(1,)) if (not flag_multi_class) else img
         img = np.reshape(img,(1,)+img.shape)
-        print(img)
+        print("Image number", i, " (converted), min: ", np.amin(img), "max: ", np.amax(img))
+        # print("Image converted: ", img)
         yield img
 
 
